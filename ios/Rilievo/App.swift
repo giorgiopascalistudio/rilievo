@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import RoomPlan
 
 @main
 struct RilievoApp: App {
@@ -20,7 +21,7 @@ struct RilievoApp: App {
     }
 }
 
-struct RilievoAperto: Identifiable { let id: UUID }
+struct RilievoAperto: Identifiable { let id: UUID; var scansiona = false }
 
 struct Elenco: View {
     @EnvironmentObject private var archivio: Archivio
@@ -61,7 +62,7 @@ struct Elenco: View {
             }
             .fullScreenCover(item: $aperto) { a in
                 if let r = archivio.rilievo(a.id) {
-                    NavigationStack { EditorView(rilievo: r, archivio: archivio) }
+                    NavigationStack { EditorView(rilievo: r, archivio: archivio, scansiona: a.scansiona) }
                         .preferredColorScheme(.dark)
                         .tint(Tema.cAccento)
                 }
@@ -131,27 +132,59 @@ struct Elenco: View {
         .foregroundStyle(.primary)
     }
 
+    private func crea(scansiona: Bool) {
+        let f = DateFormatter()
+        f.dateFormat = "dd/MM/yyyy HH:mm"
+        let r = Rilievo(nome: (scansiona ? "Scansione " : "Rilievo ") + f.string(from: Date()))
+        withAnimation(.spring) { archivio.salva(r) }
+        aperto = RilievoAperto(id: r.id, scansiona: scansiona)
+    }
+
     private var nuovoRilievo: some View {
-        Button {
-            let f = DateFormatter()
-            f.dateFormat = "dd/MM/yyyy HH:mm"
-            let r = Rilievo(nome: "Rilievo " + f.string(from: Date()))
-            withAnimation(.spring) { archivio.salva(r) }
-            aperto = RilievoAperto(id: r.id)
-        } label: {
-            VStack(spacing: 12) {
-                Image(systemName: "plus")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(.black)
-                    .frame(width: 64, height: 64)
-                    .background(Tema.cAccento, in: Circle())
-                    .shadow(color: Tema.cAccento.opacity(0.6), radius: 16)
-                Text("Nuovo rilievo").font(.headline)
+        VStack(spacing: 12) {
+            if RoomCaptureSession.isSupported {
+                Button { crea(scansiona: true) } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "camera.metering.matrix")
+                            .font(.system(size: 26, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .frame(width: 58, height: 58)
+                            .background(Tema.cAccento, in: Circle())
+                            .shadow(color: Tema.cAccento.opacity(0.6), radius: 14)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Scansiona con LiDAR").font(.headline)
+                            Text("Pareti, porte e finestre in automatico, arredi esclusi")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, minHeight: 100)
+                    .background(LinearGradient(colors: [Tema.cAccento.opacity(0.25), Tema.cAccento.opacity(0.05)],
+                                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                                in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(Tema.cAccento.opacity(0.5), lineWidth: 1))
+                }
+                .buttonStyle(EffettoPremuto())
             }
-            .frame(maxWidth: .infinity, minHeight: 210)
-            .background(RoundedRectangle(cornerRadius: 22).stroke(Tema.cAccento.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [8, 6])))
+            Button { crea(scansiona: false) } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "pencil.and.outline")
+                        .font(.system(size: 24, weight: .semibold))
+                        .frame(width: 58, height: 58)
+                        .background(Color.white.opacity(0.1), in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Disegna la pianta").font(.headline)
+                        Text("A mano libera con la Pencil o col dito").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: 100)
+                .background(RoundedRectangle(cornerRadius: 22).stroke(Tema.cAccento.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [8, 6])))
+            }
+            .buttonStyle(EffettoPremuto())
         }
-        .buttonStyle(EffettoPremuto())
         .foregroundStyle(.primary)
     }
 }

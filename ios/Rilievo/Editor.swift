@@ -25,8 +25,11 @@ struct EditorView: View {
     @Namespace private var ns
     @Environment(\.dismiss) private var chiudi
 
-    init(rilievo: Rilievo, archivio: Archivio) {
+    private let scansionaSubito: Bool
+
+    init(rilievo: Rilievo, archivio: Archivio, scansiona: Bool = false) {
         _model = StateObject(wrappedValue: EditorModel(rilievo: rilievo, archivio: archivio))
+        scansionaSubito = scansiona
     }
 
     var body: some View {
@@ -60,7 +63,11 @@ struct EditorView: View {
                 Button("Salva") { model.rinomina(nuovoNome) }
                 Button("Annulla", role: .cancel) {}
             }
-            .onAppear { if model.selezione != .nessuna { ispettore = true } }
+            .onAppear {
+                if model.selezione != .nessuna { ispettore = true }
+                if scansionaSubito && model.rilievo.stanze.isEmpty && RoomCaptureSession.isSupported { scansione = true }
+            }
+            .overlay(alignment: .top) { if model.rilievo.stanze.isEmpty { vuoto.padding(.top, 60) } }
             .onDisappear { Sincro.condivisa.sincronizza(nil) }
     }
 
@@ -119,8 +126,43 @@ struct EditorView: View {
         return "\(model.rilievo.stanze.count) stanze · \(q.fatte)/\(q.totali) quote · tocca una stanza"
     }
 
+    private var vuoto: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "square.dashed")
+                .font(.system(size: 54, weight: .light))
+                .foregroundStyle(Tema.cAccento.opacity(0.7))
+                .symbolEffect(.pulse)
+            Text("Pianta vuota").font(.title3.weight(.semibold))
+            if RoomCaptureSession.isSupported {
+                Button { scansione = true } label: {
+                    Label("Scansiona con LiDAR", systemImage: "camera.metering.matrix")
+                        .font(.headline).padding(.horizontal, 22).padding(.vertical, 14)
+                        .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
+                        .shadow(color: Tema.cAccento.opacity(0.5), radius: 12)
+                }
+                .buttonStyle(EffettoPremuto())
+            }
+            Text("oppure disegna il perimetro con la Pencil
+(col dito: strumento Disegna)")
+                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+        }
+        .padding(28)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26))
+        .allowsHitTesting(true)
+        .transition(.scale.combined(with: .opacity))
+    }
+
     private var barraInferiore: some View {
         VStack(spacing: 8) {
+            if RoomCaptureSession.isSupported && !model.rilievo.stanze.isEmpty {
+                Button { scansione = true } label: {
+                    Label("Scansiona altre stanze", systemImage: "camera.metering.matrix")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .background(Tema.cAccento.opacity(0.9), in: Capsule()).foregroundStyle(.black)
+                }
+                .buttonStyle(EffettoPremuto())
+            }
             Text(testoStato)
                 .font(.footnote.monospacedDigit().weight(.medium))
                 .foregroundStyle(.white.opacity(0.9))
