@@ -23,6 +23,7 @@ struct EditorView: View {
     @State private var rinomina = false
     @State private var nuovoNome = ""
     @Namespace private var ns
+    @Environment(\.dismiss) private var chiudi
 
     init(rilievo: Rilievo, archivio: Archivio) {
         _model = StateObject(wrappedValue: EditorModel(rilievo: rilievo, archivio: archivio))
@@ -64,6 +65,11 @@ struct EditorView: View {
     }
 
     @ToolbarContentBuilder private var strumentiAlti: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { Sincro.condivisa.sincronizza(nil); chiudi() } label: {
+                Label("Rilievi", systemImage: "chevron.backward").labelStyle(.titleAndIcon)
+            }
+        }
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button { model.annulla() } label: { Image(systemName: "arrow.uturn.backward") }
                 .disabled(!model.puoAnnullare)

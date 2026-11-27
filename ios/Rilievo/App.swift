@@ -20,10 +20,12 @@ struct RilievoApp: App {
     }
 }
 
+struct RilievoAperto: Identifiable { let id: UUID }
+
 struct Elenco: View {
     @EnvironmentObject private var archivio: Archivio
     @ObservedObject private var sincro = Sincro.condivisa
-    @State private var percorso: [UUID] = []
+    @State private var aperto: RilievoAperto?
     @State private var sceltaCartella = false
     @State private var impostazioni = false
     @State private var daEliminare: Rilievo?
@@ -32,7 +34,7 @@ struct Elenco: View {
     private let colonne = [GridItem(.adaptive(minimum: 260, maximum: 420), spacing: 16)]
 
     var body: some View {
-        NavigationStack(path: $percorso) {
+        NavigationStack {
             ZStack {
                 Tema.sfondo
                 ScrollView {
@@ -42,7 +44,7 @@ struct Elenco: View {
                         LazyVGrid(columns: colonne, spacing: 16) {
                             nuovoRilievo
                             ForEach(Array(archivio.rilievi.enumerated()), id: \.element.id) { k, r in
-                                NavigationLink(value: r.id) { Scheda(rilievo: r) }
+                                Button { aperto = RilievoAperto(id: r.id) } label: { Scheda(rilievo: r) }
                                     .buttonStyle(EffettoPremuto())
                                     .contextMenu {
                                         Button(role: .destructive) { daEliminare = r } label: { Label("Elimina", systemImage: "trash") }
@@ -57,15 +59,19 @@ struct Elenco: View {
                 }
                 .refreshable { Sincro.condivisa.sincronizza(archivio) }
             }
-            .navigationDestination(for: UUID.self) { id in
-                if let r = archivio.rilievo(id) { EditorView(rilievo: r, archivio: archivio) }
+            .fullScreenCover(item: $aperto) { a in
+                if let r = archivio.rilievo(a.id) {
+                    NavigationStack { EditorView(rilievo: r, archivio: archivio) }
+                        .preferredColorScheme(.dark)
+                        .tint(Tema.cAccento)
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 comparso = true
-                if percorso.isEmpty, let r = Prova.rilievo() {
+                if aperto == nil, let r = Prova.rilievo() {
                     archivio.salva(r)
-                    percorso.append(r.id)
+                    aperto = RilievoAperto(id: r.id)
                 }
             }
             .fileImporter(isPresented: $sceltaCartella, allowedContentTypes: [.folder]) { esito in
@@ -131,7 +137,7 @@ struct Elenco: View {
             f.dateFormat = "dd/MM/yyyy HH:mm"
             let r = Rilievo(nome: "Rilievo " + f.string(from: Date()))
             withAnimation(.spring) { archivio.salva(r) }
-            percorso.append(r.id)
+            aperto = RilievoAperto(id: r.id)
         } label: {
             VStack(spacing: 12) {
                 Image(systemName: "plus")
