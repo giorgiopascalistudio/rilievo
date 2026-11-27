@@ -185,6 +185,18 @@ struct EditorView: View {
                 .background(Tema.cFondo2.opacity(0.96), in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Tema.bordo, lineWidth: 1))
             HStack(spacing: 2) {
+                Button {
+                    withAnimation(.easeOut(duration: 0.18)) { model.angoliLiberi.toggle() }
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: model.angoliLiberi ? "angle" : "square.dashed").font(.system(size: 19, weight: .medium))
+                        Text(model.angoliLiberi ? "Libero" : "In squadra").font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(model.angoliLiberi ? Tema.cStimato : Color.white.opacity(0.75))
+                    .frame(width: 62, height: 48)
+                }
+                .buttonStyle(EffettoPremuto())
+                Rectangle().fill(Tema.bordo).frame(width: 1, height: 32)
                 ForEach(Strumento.allCases) { t in
                     Button {
                         withAnimation(.easeOut(duration: 0.18)) { model.strumento = t }

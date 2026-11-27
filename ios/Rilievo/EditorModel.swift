@@ -51,6 +51,8 @@ final class EditorModel: ObservableObject {
     @Published var mostraArredi = true
     @Published var mostraDiagonali = true
     @Published var mostraNuvola = true
+    /// disegno a mano libera con angoli liberi (45° e qualsiasi) invece che tutto in squadra
+    @Published var angoliLiberi = false
     @Published var avviso: String?
     @Published var inquadra = 0
     /// ultima stanza nata da uno schizzo, per l'animazione schizzo → linee dritte
@@ -189,7 +191,7 @@ final class EditorModel: ObservableObject {
 
     /// Schizzo a mano libera → stanza a lati dritti.
     func aggiungiTratto(_ tratto: [CGPoint], eps: CGFloat, chiusura: CGFloat) {
-        guard var poly = Geo.raddrizza(tratto, eps: eps, chiusura: chiusura, asse: asse) else {
+        guard var poly = Geo.raddrizza(tratto, eps: eps, chiusura: chiusura, asse: asse, soloSquadra: !angoliLiberi) else {
             avviso = "Chiudi il perimetro tornando al punto di partenza"
             return
         }
@@ -201,7 +203,8 @@ final class EditorModel: ObservableObject {
         }
         guard abs(Geo.area(poly)) > 0.15 else { avviso = "Stanza troppo piccola"; return }
         registra()
-        let s = Stanza.nuova(nome: "Stanza \(rilievo.stanze.count + 1)", punti: poly)
+        var s = Stanza.nuova(nome: "Stanza \(rilievo.stanze.count + 1)", punti: poly)
+        if angoliLiberi { s.angoliLiberi = true }
         rilievo.stanze.append(s)
         nataDaSchizzo = (s.id, tratto)
         selezione = .stanza(s.id)
@@ -302,8 +305,23 @@ final class EditorModel: ObservableObject {
         for (j, s) in rilievo.stanze.enumerated() where j != i {
             for v in s.punti where v.dist(q) < aggancio { q = v }
         }
-        rilievo.stanze[i].punti[k] = q
-        rilievo.stanze[i].aggiornaStime()
+        var s = rilievo.stanze[i]
+        let n = s.n
+        let prev = (k - 1 + n) % n, next = (k + 1) % n
+        let retti = Set(Risolutore.angoliRetti(s))
+        if s.inSquadra && n >= 4 && retti.contains(k) {
+            // trascinamento "da CAD": i lati adiacenti restano paralleli a se stessi
+            for nb in [prev, next] {
+                let e = s.punti[nb] - s.punti[k]
+                guard e.lunghezza > 1e-6 else { continue }
+                let d = e.versore, nrm = CGPoint(x: -d.y, y: d.x)
+                // il vicino scorre lungo la propria direzione perpendicolare al lato
+                s.punti[nb] = s.punti[nb] + nrm * (q - s.punti[k]).dot(nrm)
+            }
+        }
+        s.punti[k] = q
+        s.aggiornaStime()
+        rilievo.stanze[i] = s
     }
 
     func traslaStanza(_ id: UUID, di d: CGPoint) {

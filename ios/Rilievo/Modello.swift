@@ -157,6 +157,9 @@ struct Stanza: Codable, Identifiable, Equatable {
     var origine = "disegno"
     /// fetta orizzontale della nuvola di punti (metri), mostrata sotto la pianta
     var traccia: [CGPoint]?
+    /// nil/false = in squadra: angoli a 90° finché le diagonali misurate non dicono altro
+    var angoliLiberi: Bool?
+    var inSquadra: Bool { !(angoliLiberi ?? false) }
 
     static func nuova(nome: String, punti: [CGPoint], spessore: Double = 0.25) -> Stanza {
         let n = punti.count

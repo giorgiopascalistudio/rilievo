@@ -138,7 +138,7 @@ enum Geo {
 
     /// Trasforma uno schizzo a mano libera in un poligono a lati dritti:
     /// semplifica, aggancia gli angoli a multipli di 45° rispetto all'asse e unisce i tratti allineati.
-    static func raddrizza(_ tratto: [CGPoint], eps: CGFloat, chiusura: CGFloat, asse: Double?, tolleranza: Double = 12) -> [CGPoint]? {
+    static func raddrizza(_ tratto: [CGPoint], eps: CGFloat, chiusura: CGFloat, asse: Double?, soloSquadra: Bool = true, tolleranza: Double = 12) -> [CGPoint]? {
         guard tratto.count > 4 else { return nil }
         let box = riquadro(tratto)
         let diag = hypot(box.width, box.height)
@@ -160,8 +160,9 @@ enum Geo {
             var rel = (th - rif) * 180 / .pi
             rel = rel.truncatingRemainder(dividingBy: 360)
             if rel < 0 { rel += 360 }
-            let s = (rel / 45).rounded() * 45
-            if abs(rel - s) < tolleranza {
+            let passo = soloSquadra ? 90.0 : 45.0
+            let s = (rel / passo).rounded() * passo
+            if soloSquadra || abs(rel - s) < tolleranza {
                 let nuovo = rif + s * .pi / 180
                 rette[k].d = CGPoint(x: cos(nuovo), y: sin(nuovo))
             }

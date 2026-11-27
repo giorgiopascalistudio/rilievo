@@ -33,39 +33,83 @@ enum Risolutore {
 
     /// Sposta i vertici perché rispettino le misure prese (minimi quadrati, Gauss–Newton).
     /// Restituisce lo scarto massimo rimasto sulle misure, in metri.
+    /// Vertici da tenere a 90°/270°: in una stanza "in squadra" tutti quelli vicini all'angolo retto.
+    static func angoliRetti(_ s: Stanza) -> [Int] {
+        guard s.inSquadra else { return [] }
+        return (0..<s.n).filter { i in
+            let a = Geo.angoloInterno(s.punti, i)
+            return abs(a - 90) < 15 || abs(a - 270) < 15
+        }
+    }
+
+    /// Sposta i vertici perché rispettino le misure prese (minimi quadrati, Gauss–Newton).
+    /// Le misure pesano quasi come vincoli rigidi; gli angoli retti sono vincoli morbidi:
+    /// finché mancano le diagonali la stanza resta in squadra, le diagonali misurate creano il fuori squadra.
+    /// Restituisce lo scarto massimo rimasto sulle misure, in metri.
     @discardableResult
     static func risolvi(_ s: inout Stanza) -> Double {
         let n = s.n
         guard n >= 3 else { return 0 }
         var vinc: [Vincolo] = []
+        var misure = false
         for i in 0..<n {
             if let m = s.lati[i].lunghezza.misurato {
-                vinc.append(Vincolo(i: i, j: (i + 1) % n, l: m, w: 1))
+                vinc.append(Vincolo(i: i, j: (i + 1) % n, l: m, w: 1000))
+                misure = true
             } else {
-                vinc.append(Vincolo(i: i, j: (i + 1) % n, l: s.lunghezzaGeom(i), w: 0.02))
+                vinc.append(Vincolo(i: i, j: (i + 1) % n, l: s.lunghezzaGeom(i), w: 1))
             }
         }
         for d in s.diagonali where d.a < n && d.b < n {
-            vinc.append(Vincolo(i: d.a, j: d.b, l: d.misurato, w: 1))
+            vinc.append(Vincolo(i: d.a, j: d.b, l: d.misurato, w: 1000))
+            misure = true
         }
-        guard vinc.contains(where: { $0.w == 1 }) else { s.aggiornaStime(); return 0 }
+        let retti = angoliRetti(s)
+        guard misure || !retti.isEmpty else { s.aggiornaStime(); return 0 }
 
         let p0 = s.punti.flatMap { [Double($0.x), Double($0.y)] }
         var x = p0
         let m = 2 * n
-        let ancora = 0.002
-        for _ in 0..<80 {
+        let ancora = 0.001
+        let wAngolo = 2.0
+
+        func coseno(_ x: [Double], _ i: Int) -> Double {
+            let a = (i - 1 + n) % n, c = (i + 1) % n
+            let ux = x[2 * a] - x[2 * i], uy = x[2 * a + 1] - x[2 * i + 1]
+            let vx = x[2 * c] - x[2 * i], vy = x[2 * c + 1] - x[2 * i + 1]
+            let l = max(hypot(ux, uy) * hypot(vx, vy), 1e-12)
+            return (ux * vx + uy * vy) / l
+        }
+
+        for _ in 0..<120 {
             var A = Array(repeating: Array(repeating: 0.0, count: m), count: m)
             var g = Array(repeating: 0.0, count: m)
+            func aggiungi(_ J: [(Int, Double)], _ r: Double, _ w: Double) {
+                for (a, ja) in J {
+                    g[a] += w * ja * r
+                    for (b, jb) in J { A[a][b] += w * ja * jb }
+                }
+            }
             for v in vinc {
                 let dx = x[2 * v.i] - x[2 * v.j], dy = x[2 * v.i + 1] - x[2 * v.j + 1]
                 let L = max(hypot(dx, dy), 1e-9)
-                let r = L - v.l
-                let J: [(Int, Double)] = [(2 * v.i, dx / L), (2 * v.i + 1, dy / L), (2 * v.j, -dx / L), (2 * v.j + 1, -dy / L)]
-                for (a, ja) in J {
-                    g[a] += v.w * ja * r
-                    for (b, jb) in J { A[a][b] += v.w * ja * jb }
+                aggiungi([(2 * v.i, dx / L), (2 * v.i + 1, dy / L), (2 * v.j, -dx / L), (2 * v.j + 1, -dy / L)], L - v.l, v.w)
+            }
+            for i in retti {
+                let r = coseno(x, i)
+                let idx = [(i - 1 + n) % n, i, (i + 1) % n].flatMap { [2 * $0, 2 * $0 + 1] }
+                var J: [(Int, Double)] = []
+                var y = x
+                for k in idx {
+                    let h = 1e-6
+                    y[k] = x[k] + h
+                    let f1 = coseno(y, i)
+                    y[k] = x[k] - h
+                    let f2 = coseno(y, i)
+                    y[k] = x[k]
+                    J.append((k, (f1 - f2) / (2 * h)))
                 }
+                aggiungi(J, r, wAngolo)
             }
             for k in 0..<m {
                 A[k][k] += ancora + 1e-9

@@ -165,6 +165,9 @@ struct SchedaStanza: View {
             }
             .padding(.vertical, 4)
             .animation(.easeInOut(duration: 0.25), value: st.latiQuotati + st.diagMisurate)
+            Toggle("In squadra", isOn: Binding(get: { s.inSquadra }, set: { v in
+                model.modificaStanza(s.id, risolvi: true) { $0.angoliLiberi = v ? nil : true }
+            }))
             TextField("Nome stanza", text: Binding(get: { s.nome },
                                                    set: { v in model.modificaStanza(s.id, annullabile: false) { $0.nome = v } }))
             if st.scarto > 0.01 {
@@ -208,7 +211,7 @@ struct SchedaStanza: View {
             } header: {
                 Label("Diagonali", systemImage: "line.diagonal")
             } footer: {
-                Text("Per bloccare una stanza di \(s.n) lati servono \(s.n - 3) diagonali (tratteggio arancione). Quella viola è di controllo: se non torna, l'app ti avvisa. Sono scelte evitando gli arredi rilevati.")
+                Text("La stanza resta in squadra finché non misuri le diagonali: sono loro a creare il fuori squadra, e togliendole torna a 90°. Per bloccare una stanza di \(s.n) lati servono \(s.n - 3) diagonali (tratteggio ambra). Quella viola è di controllo: se non torna, l'app ti avvisa. Sono scelte evitando gli arredi rilevati.")
             }
         }
 
