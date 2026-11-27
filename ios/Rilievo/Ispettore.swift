@@ -31,16 +31,15 @@ struct CampoQuota: View {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .font(.body.monospacedDigit().weight(.semibold))
-                .foregroundStyle(Tema.cMisurato)
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 10).padding(.vertical, 7)
                 .frame(width: 96)
-                .background(RoundedRectangle(cornerRadius: 9).fill(Color.white.opacity(fuoco ? 0.12 : 0.06)))
-                .overlay(RoundedRectangle(cornerRadius: 9).stroke(fuoco ? Tema.cAccento : .clear, lineWidth: 1.5))
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(fuoco ? 0.12 : 0.06)))
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(fuoco ? Tema.cAccento : .clear, lineWidth: 1.5))
                 .focused($fuoco)
                 .onSubmit(commit)
-            Image(systemName: quota.quotato ? "checkmark.seal.fill" : "seal")
-                .foregroundStyle(quota.quotato ? Tema.cMisurato : .secondary)
-                .symbolEffect(.bounce, value: conferma)
+            Image(systemName: quota.quotato ? "checkmark.circle.fill" : "circle.dashed")
+                .foregroundStyle(quota.quotato ? Tema.cQuotato : Color.secondary.opacity(0.5))
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: 22)
         }
@@ -77,19 +76,19 @@ struct Ispettore: View {
         NavigationStack {
             Form { contenuto }
                 .scrollContentBackground(.hidden)
-                .background(Tema.cFondo2.opacity(0.6))
+                .background(Tema.cFondo)
                 .navigationTitle(titolo)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         if let id = model.selezione.stanzaID, !suStanza {
-                            Button { withAnimation(.snappy) { model.selezione = .stanza(id) } } label: {
+                            Button { withAnimation(.easeInOut(duration: 0.2)) { model.selezione = .stanza(id) } } label: {
                                 Label("Stanza", systemImage: "chevron.backward")
                             }
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { withAnimation(.snappy) { model.selezione = .nessuna } } label: {
+                        Button { withAnimation(.easeInOut(duration: 0.2)) { model.selezione = .nessuna } } label: {
                             Image(systemName: "xmark.circle.fill").symbolRenderingMode(.hierarchical)
                         }
                     }
@@ -102,7 +101,7 @@ struct Ispettore: View {
         }
         .presentationDetents([.fraction(0.45), .large])
         .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.45)))
-        .presentationBackground(.ultraThinMaterial)
+        .presentationBackground(Tema.cFondo)
     }
 
     private var titolo: String {
@@ -152,7 +151,7 @@ struct SchedaStanza: View {
                     AnelloAvanzamento(valore: st.avanzamento, spessore: 6)
                     Image(systemName: st.bloccata ? "lock.fill" : "lock.open")
                         .font(.title3)
-                        .foregroundStyle(st.bloccata ? Tema.cMisurato : Tema.cStimato)
+                        .foregroundStyle(st.bloccata ? Tema.cQuotato : Tema.cStimato)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .frame(width: 58, height: 58)
@@ -165,7 +164,7 @@ struct SchedaStanza: View {
                 }
             }
             .padding(.vertical, 4)
-            .animation(.spring, value: st.latiQuotati + st.diagMisurate)
+            .animation(.easeInOut(duration: 0.25), value: st.latiQuotati + st.diagMisurate)
             TextField("Nome stanza", text: Binding(get: { s.nome },
                                                    set: { v in model.modificaStanza(s.id, annullabile: false) { $0.nome = v } }))
             if st.scarto > 0.01 {
@@ -252,10 +251,10 @@ struct SchedaStanza: View {
 
         Section {
             ForEach(s.aperture) { a in
-                Button { withAnimation(.snappy) { model.selezione = .apertura(s.id, a.id) } } label: {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { model.selezione = .apertura(s.id, a.id) } } label: {
                     HStack {
-                        Image(systemName: a.completa ? "checkmark.seal.fill" : "seal")
-                            .foregroundStyle(a.completa ? Tema.cMisurato : Tema.cStimato)
+                        Image(systemName: a.completa ? "checkmark.circle.fill" : "circle.dashed")
+                            .foregroundStyle(a.completa ? Tema.cQuotato : Tema.cStimato)
                         Text(a.tipo.nome)
                         Text(s.nomeLato(a.lato)).foregroundStyle(.secondary)
                         Spacer()
@@ -320,7 +319,7 @@ struct SchedaLato: View {
         }
         Section("Aperture su questo lato") {
             ForEach(s.aperture.filter { $0.lato == i }) { a in
-                Button { withAnimation(.snappy) { model.selezione = .apertura(s.id, a.id) } } label: {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { model.selezione = .apertura(s.id, a.id) } } label: {
                     LabeledContent(a.tipo.nome, value: a.sintesi)
                 }
                 .foregroundStyle(.primary)

@@ -201,7 +201,7 @@ struct SchermataScansione: View {
                             .font(.headline.monospacedDigit())
                             .contentTransition(.numericText())
                             .padding(.horizontal, 14).padding(.vertical, 10)
-                            .background(.ultraThinMaterial, in: Capsule())
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                     }
                 }
                 Spacer()
@@ -216,35 +216,35 @@ struct SchermataScansione: View {
                         VStack(spacing: 10) {
                             Text("Inquadra pareti, angoli, porte e finestre. Muoviti piano.")
                                 .font(.footnote).foregroundStyle(.white.opacity(0.85))
-                            Button { withAnimation(.spring) { stato.vc?.fineStanza() } } label: {
+                            Button { withAnimation(.easeInOut(duration: 0.2)) { stato.vc?.fineStanza() } } label: {
                                 Label("Fine stanza", systemImage: "stop.fill").font(.headline)
                                     .padding(.horizontal, 26).padding(.vertical, 14)
-                                    .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
+                                    .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(.white)
                             }
                             .buttonStyle(EffettoPremuto())
                         }
                     case .elaborazione:
                         HStack(spacing: 10) { ProgressView(); Text("Ricostruzione della stanza…") }
-                            .padding(14).background(.ultraThinMaterial, in: Capsule())
+                            .padding(14).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                     case .rivedi:
                         HStack(spacing: 12) {
-                            Button { withAnimation(.spring) { stato.vc?.avvia() } } label: {
+                            Button { withAnimation(.easeInOut(duration: 0.2)) { stato.vc?.avvia() } } label: {
                                 Label("Altra stanza", systemImage: "plus").font(.headline)
                                     .padding(.horizontal, 20).padding(.vertical, 14)
-                                    .background(.ultraThinMaterial, in: Capsule())
+                                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                             }
                             Button { fine(stato.stanze); dismiss() } label: {
                                 Label("Usa \(stato.stanze.count == 1 ? "la stanza" : "\(stato.stanze.count) stanze")",
                                       systemImage: "checkmark").font(.headline)
                                     .padding(.horizontal, 20).padding(.vertical, 14)
-                                    .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
+                                    .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(.white)
                             }
                         }
                         .buttonStyle(EffettoPremuto())
                     }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: stato.fase)
+                .animation(.easeInOut(duration: 0.25), value: stato.fase)
             }
             .padding()
         }

@@ -261,7 +261,7 @@ struct SchermataNuvola: View {
                 comandi
             }
             .padding()
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: scanner.fase)
+            .animation(.easeInOut(duration: 0.25), value: scanner.fase)
         }
         .onAppear { scanner.avvia() }
         .onDisappear { scanner.ferma() }
@@ -282,20 +282,20 @@ struct SchermataNuvola: View {
                 Button { scanner.fineStanza(nome: nomeStanza) } label: {
                     Label("Fine stanza", systemImage: "stop.fill").font(.headline)
                         .padding(.horizontal, 26).padding(.vertical, 14)
-                        .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
+                        .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(.white)
                 }
                 .buttonStyle(EffettoPremuto())
                 .disabled(scanner.numeroPunti < 5000)
             }
         case .elaborazione:
             HStack(spacing: 10) { ProgressView(); Text("Semplificazione della nuvola…") }
-                .padding(14).background(.ultraThinMaterial, in: Capsule())
+                .padding(14).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
         case .rivedi, .pausa:
             HStack(spacing: 12) {
                 Button { scanner.nuovaStanza() } label: {
                     Label("Altra stanza", systemImage: "plus").font(.headline)
                         .padding(.horizontal, 18).padding(.vertical, 14)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                 }
                 if !scanner.stanze.isEmpty {
                     Button {
@@ -309,7 +309,7 @@ struct SchermataNuvola: View {
                         Label("Usa \(scanner.stanze.count == 1 ? "la stanza" : "\(scanner.stanze.count) stanze")",
                               systemImage: "checkmark").font(.headline)
                             .padding(.horizontal, 18).padding(.vertical, 14)
-                            .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
+                            .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(.white)
                     }
                 }
             }

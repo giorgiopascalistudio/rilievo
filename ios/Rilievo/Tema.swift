@@ -3,31 +3,29 @@ import UIKit
 
 /// Stile "blueprint": fondo blu notte, muri chiari, quote misurate verdi e stimate ambra.
 enum Tema {
-    static let fondo = UIColor(red: 0.035, green: 0.067, blue: 0.118, alpha: 1)
-    static let fondo2 = UIColor(red: 0.066, green: 0.118, blue: 0.196, alpha: 1)
-    static let griglia = UIColor(red: 0.32, green: 0.62, blue: 0.98, alpha: 1)
-    static let muro = UIColor(red: 0.89, green: 0.93, blue: 0.98, alpha: 1)
-    static let pavimento = UIColor(red: 0.09, green: 0.17, blue: 0.27, alpha: 1)
-    static let accento = UIColor(red: 0.18, green: 0.86, blue: 0.96, alpha: 1)
-    static let misurato = UIColor(red: 0.42, green: 0.96, blue: 0.64, alpha: 1)
-    static let stimato = UIColor(red: 1.0, green: 0.71, blue: 0.29, alpha: 1)
-    static let controllo = UIColor(red: 0.62, green: 0.58, blue: 1.0, alpha: 1)
+    static let fondo = UIColor(red: 0.082, green: 0.086, blue: 0.094, alpha: 1)
+    static let fondo2 = UIColor(red: 0.118, green: 0.122, blue: 0.133, alpha: 1)
+    static let griglia = UIColor(red: 0.55, green: 0.58, blue: 0.62, alpha: 1)
+    static let muro = UIColor(red: 0.62, green: 0.64, blue: 0.67, alpha: 1)
+    static let pavimento = UIColor(red: 0.125, green: 0.13, blue: 0.14, alpha: 1)
+    static let accento = UIColor(red: 0.36, green: 0.58, blue: 0.92, alpha: 1)
+    static let misurato = UIColor(red: 0.94, green: 0.95, blue: 0.96, alpha: 1)
+    static let stimato = UIColor(red: 0.86, green: 0.66, blue: 0.38, alpha: 1)
+    static let controllo = UIColor(red: 0.60, green: 0.62, blue: 0.70, alpha: 1)
     static let testo = UIColor(white: 0.96, alpha: 1)
     static let testo2 = UIColor(white: 0.62, alpha: 1)
 
     static var cAccento: Color { Color(uiColor: accento) }
     static var cMisurato: Color { Color(uiColor: misurato) }
+    static var cQuotato: Color { Color(red: 0.42, green: 0.74, blue: 0.52) }
+    static var bordo: Color { Color.white.opacity(0.09) }
     static var cStimato: Color { Color(uiColor: stimato) }
     static var cControllo: Color { Color(uiColor: controllo) }
     static var cFondo: Color { Color(uiColor: fondo) }
     static var cFondo2: Color { Color(uiColor: fondo2) }
 
     static var sfondo: some View {
-        ZStack {
-            LinearGradient(colors: [cFondo2, cFondo], startPoint: .top, endPoint: .bottom)
-            RadialGradient(colors: [cAccento.opacity(0.18), .clear], center: .topTrailing, startRadius: 10, endRadius: 520)
-        }
-        .ignoresSafeArea()
+        cFondo.ignoresSafeArea()
     }
 }
 
@@ -40,10 +38,9 @@ struct AnelloAvanzamento: View {
             Circle().stroke(Color.white.opacity(0.12), lineWidth: spessore)
             Circle()
                 .trim(from: 0, to: max(0.001, valore))
-                .stroke(AngularGradient(colors: [Tema.cAccento, Tema.cMisurato, Tema.cAccento], center: .center),
-                        style: StrokeStyle(lineWidth: spessore, lineCap: .round))
+                .stroke(Tema.cAccento, style: StrokeStyle(lineWidth: spessore, lineCap: .butt))
                 .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: valore)
+                .animation(.easeInOut(duration: 0.3), value: valore)
         }
     }
 }
@@ -64,8 +61,8 @@ struct Miniatura: View {
                 var path = Path()
                 path.addLines(s.punti.map(t))
                 path.closeSubpath()
-                ctx.fill(path, with: .color(Tema.cAccento.opacity(0.12)))
-                ctx.stroke(path, with: .color(Color(uiColor: Tema.muro)), lineWidth: 2)
+                ctx.fill(path, with: .color(Color.white.opacity(0.05)))
+                ctx.stroke(path, with: .color(Color.white.opacity(0.8)), lineWidth: 1.5)
             }
         }
     }
@@ -74,7 +71,7 @@ struct Miniatura: View {
 struct EffettoPremuto: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.6 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }

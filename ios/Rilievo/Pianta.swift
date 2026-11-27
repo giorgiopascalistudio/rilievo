@@ -141,8 +141,6 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
             if cambia { mostrati[s.id] = p; ridisegna = true }
         }
         if schizzo != nil || !comparsa.isEmpty { ridisegna = true }
-        if m.mostraDiagonali, let id = m.selezione.stanzaID, let s = m.stanza(id), s.n >= 4,
-           s.diagonali.count < s.n - 2 { ridisegna = true }
         if ridisegna { setNeedsDisplay() }
     }
 
@@ -380,7 +378,7 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
 
         // pavimento
         let pav = poligono(P)
-        (selezionata ? Tema.accento.withAlphaComponent(0.10) : Tema.pavimento.withAlphaComponent(0.55)).setFill()
+        (selezionata ? Tema.accento.withAlphaComponent(0.07) : Tema.pavimento).setFill()
         pav.fill()
 
         // traccia della nuvola di punti
@@ -413,9 +411,14 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
             Tema.muro.setFill()
             q.fill()
         }
+        let filoInt = poligono(P), filoEst = poligono(E)
+        filoInt.lineWidth = 1
+        filoEst.lineWidth = 1
+        UIColor(white: 0.92, alpha: 1).setStroke()
+        filoInt.stroke()
+        filoEst.stroke()
         if selezionata {
             ctx.saveGState()
-            ctx.setShadow(offset: .zero, blur: 12, color: Tema.accento.withAlphaComponent(0.8).cgColor)
             let bordo = poligono(P)
             bordo.lineWidth = 1.5
             Tema.accento.setStroke()
@@ -477,7 +480,6 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
             }
             if case .apertura(_, let aid) = sel, aid == a.id {
                 ctx.saveGState()
-                ctx.setShadow(offset: .zero, blur: 10, color: Tema.accento.cgColor)
                 vano.lineWidth = 2.5
                 Tema.accento.setStroke()
                 vano.stroke()
@@ -501,15 +503,13 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
                 scrivi(Fmt.m(d.misurato), .medio(P[d.a], P[d.b]), size: 10, color: Tema.misurato, peso: .semibold,
                        angolo: Geo.angoloLeggibile(P[d.a], P[d.b]), sfondo: true)
             }
-            let fase = CGFloat(tempo.truncatingRemainder(dividingBy: 1) * 20)
-            let pulsa = CGFloat(0.55 + 0.45 * sin(tempo * 4))
             for g in Risolutore.diagonaliDaMisurare(s) {
                 let path = UIBezierPath()
                 path.move(to: P[g.a]); path.addLine(to: P[g.b])
                 let col = g.controllo ? Tema.controllo : Tema.stimato
                 path.lineWidth = isDiag(sel, s.id, g.a, g.b) ? 3 : 1.6
-                path.setLineDash([7, 5], count: 2, phase: selezionata ? -fase : 0)
-                col.withAlphaComponent(selezionata ? pulsa : 0.5).setStroke()
+                path.setLineDash([6, 4], count: 2, phase: 0)
+                col.withAlphaComponent(selezionata ? 0.95 : 0.5).setStroke()
                 path.stroke()
                 if selezionata || scala > 50 {
                     scrivi(g.controllo ? "controllo" : "misura", .medio(P[g.a], P[g.b]), size: 9.5, color: col,
@@ -525,7 +525,6 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
             let no = Geo.normaleEsterna(s.punti, i)
             if case .lato(let id, let k) = sel, id == s.id, k == i {
                 ctx.saveGState()
-                ctx.setShadow(offset: .zero, blur: 10, color: Tema.accento.cgColor)
                 let l = UIBezierPath()
                 l.move(to: P[i]); l.addLine(to: P[j])
                 l.lineWidth = 4
@@ -569,7 +568,7 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
             scrivi(s.soffitto.descrizione, C + CGPoint(x: 0, y: 18), size: 10,
                    color: s.soffitto.altezza.quotato ? Tema.misurato : Tema.stimato)
             if stato.bloccata {
-                scrivi("● bloccata", C + CGPoint(x: 0, y: 33), size: 9.5, color: Tema.misurato, peso: .semibold)
+                scrivi("bloccata", C + CGPoint(x: 0, y: 33), size: 9.5, color: Tema.misurato, peso: .semibold)
             }
         }
     }

@@ -32,7 +32,7 @@ struct Elenco: View {
     @State private var daEliminare: Rilievo?
     @State private var comparso = false
 
-    private let colonne = [GridItem(.adaptive(minimum: 260, maximum: 420), spacing: 16)]
+    private let colonne = [GridItem(.adaptive(minimum: 240, maximum: 360), spacing: 12)]
 
     var body: some View {
         NavigationStack {
@@ -42,7 +42,7 @@ struct Elenco: View {
                     VStack(alignment: .leading, spacing: 18) {
                         testata
                         statoSincro
-                        LazyVGrid(columns: colonne, spacing: 16) {
+                        LazyVGrid(columns: colonne, spacing: 12) {
                             nuovoRilievo
                             ForEach(Array(archivio.rilievi.enumerated()), id: \.element.id) { k, r in
                                 Button { aperto = RilievoAperto(id: r.id) } label: { Scheda(rilievo: r) }
@@ -51,8 +51,7 @@ struct Elenco: View {
                                         Button(role: .destructive) { daEliminare = r } label: { Label("Elimina", systemImage: "trash") }
                                     }
                                     .opacity(comparso ? 1 : 0)
-                                    .offset(y: comparso ? 0 : 24)
-                                    .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(Double(min(k, 10)) * 0.05), value: comparso)
+                                    .animation(.easeOut(duration: 0.25).delay(Double(min(k, 8)) * 0.03), value: comparso)
                             }
                         }
                     }
@@ -84,7 +83,7 @@ struct Elenco: View {
             .confirmationDialog("Eliminare il rilievo?", isPresented: Binding(get: { daEliminare != nil }, set: { if !$0 { daEliminare = nil } }),
                                 titleVisibility: .visible) {
                 Button("Elimina", role: .destructive) {
-                    if let r = daEliminare { withAnimation(.spring) { archivio.elimina(r.id) } }
+                    if let r = daEliminare { withAnimation(.easeInOut(duration: 0.2)) { archivio.elimina(r.id) } }
                 }
             } message: {
                 Text("Viene eliminato anche dall'altro dispositivo sincronizzato.")
@@ -95,10 +94,9 @@ struct Elenco: View {
     private var testata: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Rilievo")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
-                    .foregroundStyle(LinearGradient(colors: [.white, Tema.cAccento], startPoint: .leading, endPoint: .trailing))
-                Text("LiDAR · Pencil · distanziometro").font(.subheadline).foregroundStyle(.secondary)
+                Text("Rilievi")
+                    .font(.largeTitle.weight(.bold))
+                Text("\(archivio.rilievi.count) lavori").font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -111,7 +109,7 @@ struct Elenco: View {
                 Image(systemName: sincro.attiva ? "icloud.fill" : "icloud.slash")
                     .font(.title3)
                     .foregroundStyle(sincro.attiva ? Tema.cAccento : .secondary)
-                    .symbolEffect(.pulse, isActive: sincro.inCorso)
+                    .opacity(sincro.inCorso ? 0.5 : 1)
                 VStack(alignment: .leading, spacing: 2) {
                     if sincro.attiva {
                         Text("Sincronizzato con iCloud Drive · \(sincro.nomeCartella)").font(.subheadline.weight(.medium))
@@ -126,7 +124,8 @@ struct Elenco: View {
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(14)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tema.bordo, lineWidth: 1))
         }
         .buttonStyle(EffettoPremuto())
         .foregroundStyle(.primary)
@@ -136,7 +135,7 @@ struct Elenco: View {
         let f = DateFormatter()
         f.dateFormat = "dd/MM/yyyy HH:mm"
         let r = Rilievo(nome: (scansiona ? "Scansione " : "Rilievo ") + f.string(from: Date()))
-        withAnimation(.spring) { archivio.salva(r) }
+        archivio.salva(r)
         aperto = RilievoAperto(id: r.id, scansiona: scansiona)
     }
 
@@ -146,11 +145,10 @@ struct Elenco: View {
                 Button { crea(scansiona: true) } label: {
                     HStack(spacing: 14) {
                         Image(systemName: "camera.metering.matrix")
-                            .font(.system(size: 26, weight: .semibold))
-                            .foregroundStyle(.black)
-                            .frame(width: 58, height: 58)
-                            .background(Tema.cAccento, in: Circle())
-                            .shadow(color: Tema.cAccento.opacity(0.6), radius: 14)
+                            .font(.system(size: 22, weight: .regular))
+                            .foregroundStyle(.white)
+                            .frame(width: 46, height: 46)
+                            .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Scansiona con LiDAR").font(.headline)
                             Text("Nuvola di punti semplificata in pianta: pareti, porte, finestre, altezze")
@@ -159,20 +157,18 @@ struct Elenco: View {
                         Spacer(minLength: 0)
                     }
                     .padding(16)
-                    .frame(maxWidth: .infinity, minHeight: 100)
-                    .background(LinearGradient(colors: [Tema.cAccento.opacity(0.25), Tema.cAccento.opacity(0.05)],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: RoundedRectangle(cornerRadius: 22))
-                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(Tema.cAccento.opacity(0.5), lineWidth: 1))
+                    .frame(maxWidth: .infinity, minHeight: 84)
+                    .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tema.bordo, lineWidth: 1))
                 }
                 .buttonStyle(EffettoPremuto())
             }
             Button { crea(scansiona: false) } label: {
                 HStack(spacing: 14) {
                     Image(systemName: "pencil.and.outline")
-                        .font(.system(size: 24, weight: .semibold))
-                        .frame(width: 58, height: 58)
-                        .background(Color.white.opacity(0.1), in: Circle())
+                        .font(.system(size: 21, weight: .regular))
+                        .frame(width: 46, height: 46)
+                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Disegna la pianta").font(.headline)
                         Text("A mano libera con la Pencil o col dito").font(.caption).foregroundStyle(.secondary)
@@ -180,8 +176,9 @@ struct Elenco: View {
                     Spacer(minLength: 0)
                 }
                 .padding(16)
-                .frame(maxWidth: .infinity, minHeight: 100)
-                .background(RoundedRectangle(cornerRadius: 22).stroke(Tema.cAccento.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [8, 6])))
+                .frame(maxWidth: .infinity, minHeight: 84)
+                .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tema.bordo, lineWidth: 1))
             }
             .buttonStyle(EffettoPremuto())
         }
@@ -195,14 +192,14 @@ struct Scheda: View {
         let q = rilievo.quoteFatte
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 14).fill(Tema.cFondo.opacity(0.8))
+                RoundedRectangle(cornerRadius: 8).fill(Tema.cFondo)
                 if rilievo.stanze.isEmpty {
                     Image(systemName: "square.dashed").font(.largeTitle).foregroundStyle(.tertiary)
                 } else {
                     Miniatura(rilievo: rilievo)
                 }
             }
-            .frame(height: 130)
+            .frame(height: 120)
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(rilievo.nome).font(.headline).lineLimit(1)
@@ -220,9 +217,9 @@ struct Scheda: View {
                 .frame(width: 38, height: 38)
             }
         }
-        .padding(12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .padding(10)
+        .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tema.bordo, lineWidth: 1))
         .foregroundStyle(.primary)
     }
 }

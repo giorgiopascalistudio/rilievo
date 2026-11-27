@@ -46,7 +46,7 @@ struct EditorView: View {
                 Ispettore(model: model).inspectorColumnWidth(min: 330, ideal: 390, max: 520)
             }
             .onChange(of: model.selezione) { _, s in
-                withAnimation(.snappy) { ispettore = s != .nessuna }
+                withAnimation(.easeInOut(duration: 0.2)) { ispettore = s != .nessuna }
             }
             .onChange(of: ispettore) { _, v in if !v { model.selezione = .nessuna } }
             .onChange(of: model.avviso) { _, v in
@@ -111,8 +111,8 @@ struct EditorView: View {
                 .font(.subheadline.weight(.medium))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16).padding(.vertical, 10)
-                .background(.ultraThinMaterial, in: Capsule())
-                .overlay(Capsule().stroke(Tema.cAccento.opacity(0.4), lineWidth: 1))
+                .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Tema.bordo, lineWidth: 1))
                 .padding(.top, 8)
                 .padding(.horizontal)
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -143,16 +143,14 @@ struct EditorView: View {
     private var vuoto: some View {
         VStack(spacing: 18) {
             Image(systemName: "square.dashed")
-                .font(.system(size: 54, weight: .light))
+                .font(.system(size: 40, weight: .ultraLight))
                 .foregroundStyle(Tema.cAccento.opacity(0.7))
-                .symbolEffect(.pulse)
             Text("Pianta vuota").font(.title3.weight(.semibold))
             if Scanner.supportata {
                 Button { avviaScansione() } label: {
                     Label("Scansiona con LiDAR", systemImage: "camera.metering.matrix")
                         .font(.headline).padding(.horizontal, 22).padding(.vertical, 14)
-                        .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
-                        .shadow(color: Tema.cAccento.opacity(0.5), radius: 12)
+                        .background(Tema.cAccento, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(.white)
                 }
                 .buttonStyle(EffettoPremuto())
             }
@@ -160,7 +158,8 @@ struct EditorView: View {
                 .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
         .padding(28)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26))
+        .background(Tema.cFondo2, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Tema.bordo, lineWidth: 1))
         .allowsHitTesting(true)
         .transition(.scale.combined(with: .opacity))
     }
@@ -172,7 +171,9 @@ struct EditorView: View {
                     Label("Scansiona altre stanze", systemImage: "camera.metering.matrix")
                         .font(.subheadline.weight(.semibold))
                         .padding(.horizontal, 16).padding(.vertical, 9)
-                        .background(Tema.cAccento.opacity(0.9), in: Capsule()).foregroundStyle(.black)
+                        .background(Tema.cFondo2.opacity(0.96), in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Tema.bordo, lineWidth: 1))
+                        .foregroundStyle(Tema.cAccento)
                 }
                 .buttonStyle(EffettoPremuto())
             }
@@ -181,36 +182,34 @@ struct EditorView: View {
                 .foregroundStyle(.white.opacity(0.9))
                 .contentTransition(.numericText())
                 .padding(.horizontal, 14).padding(.vertical, 7)
-                .background(.ultraThinMaterial, in: Capsule())
-                .animation(.snappy, value: testoStato)
+                .background(Tema.cFondo2.opacity(0.96), in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Tema.bordo, lineWidth: 1))
             HStack(spacing: 2) {
                 ForEach(Strumento.allCases) { t in
                     Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { model.strumento = t }
+                        withAnimation(.easeOut(duration: 0.18)) { model.strumento = t }
                     } label: {
                         VStack(spacing: 3) {
                             Image(systemName: t.icona).font(.system(size: 19, weight: .medium))
-                                .symbolEffect(.bounce, value: model.strumento == t)
                             Text(t.nome).font(.system(size: 10, weight: .semibold))
                         }
-                        .foregroundStyle(model.strumento == t ? Color.black : Color.white.opacity(0.85))
-                        .frame(width: 56, height: 50)
+                        .foregroundStyle(model.strumento == t ? Tema.cAccento : Color.white.opacity(0.75))
+                        .frame(width: 56, height: 48)
                         .background {
                             if model.strumento == t {
-                                RoundedRectangle(cornerRadius: 13).fill(Tema.cAccento)
+                                RoundedRectangle(cornerRadius: 8).fill(Tema.cAccento.opacity(0.16))
                                     .matchedGeometryEffect(id: "strumento", in: ns)
-                                    .shadow(color: Tema.cAccento.opacity(0.6), radius: 8)
                             }
                         }
                     }
                     .buttonStyle(EffettoPremuto())
                 }
             }
-            .padding(5)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.08), lineWidth: 1))
+            .padding(4)
+            .background(Tema.cFondo2.opacity(0.96), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tema.bordo, lineWidth: 1))
         }
         .padding(.bottom, 10)
-        .animation(.spring, value: model.avviso)
+        .animation(.easeInOut(duration: 0.2), value: model.avviso)
     }
 }
