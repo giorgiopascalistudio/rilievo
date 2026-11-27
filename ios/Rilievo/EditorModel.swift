@@ -50,6 +50,7 @@ final class EditorModel: ObservableObject {
     @Published var strumento: Strumento = .seleziona
     @Published var mostraArredi = true
     @Published var mostraDiagonali = true
+    @Published var mostraNuvola = true
     @Published var avviso: String?
     @Published var inquadra = 0
     /// ultima stanza nata da uno schizzo, per l'animazione schizzo → linee dritte
@@ -315,6 +316,30 @@ final class EditorModel: ObservableObject {
     }
 
     // MARK: LiDAR
+
+    func importaNuvola(_ stanzeNuove: [Stanza], ply: URL?) {
+        var nuove = stanzeNuove
+        guard !nuove.isEmpty else { return }
+        registra()
+        let base = rilievo.stanze.count
+        for k in nuove.indices { nuove[k].nome = "Stanza \(base + k + 1)" }
+        if !rilievo.stanze.isEmpty {
+            let vecchio = Geo.riquadro(rilievo.stanze.flatMap(\.punti))
+            let nuovo = Geo.riquadro(nuove.flatMap(\.punti))
+            if vecchio.intersects(nuovo) {
+                let d = CGPoint(x: vecchio.maxX + 1 - nuovo.minX, y: vecchio.minY - nuovo.minY)
+                for k in nuove.indices { nuove[k].trasla(d) }
+            }
+        }
+        rilievo.stanze += nuove
+        if let ply, FileManager.default.fileExists(atPath: ply.path) {
+            rilievo.nuvole = (rilievo.nuvole ?? []) + [ply.lastPathComponent]
+        }
+        selezione = .stanza(nuove[0].id)
+        inquadra += 1
+        salva()
+        avviso = "\(nuove.count) stanze dalla nuvola di punti: ora quotale col distanziometro"
+    }
 
     func importaLidar(_ stanze: [CapturedRoom]) {
         var nuove: [Stanza] = []

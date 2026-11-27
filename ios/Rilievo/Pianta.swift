@@ -383,6 +383,17 @@ final class TelaPianta: UIView, UIGestureRecognizerDelegate {
         (selezionata ? Tema.accento.withAlphaComponent(0.10) : Tema.pavimento.withAlphaComponent(0.55)).setFill()
         pav.fill()
 
+        // traccia della nuvola di punti
+        if m.mostraNuvola, let tr = s.traccia, !tr.isEmpty {
+            let r: CGFloat = max(0.6, min(1.6, scala / 70))
+            Tema.accento.withAlphaComponent(0.55).setFill()
+            let box = bounds.insetBy(dx: -10, dy: -10)
+            for q in tr {
+                let p = w2s(q)
+                if box.contains(p) { UIRectFill(CGRect(x: p.x - r, y: p.y - r, width: 2 * r, height: 2 * r)) }
+            }
+        }
+
         // arredi rilevati (solo riferimento)
         if m.mostraArredi {
             for o in s.ostacoli {

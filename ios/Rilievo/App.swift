@@ -142,7 +142,7 @@ struct Elenco: View {
 
     private var nuovoRilievo: some View {
         VStack(spacing: 12) {
-            if RoomCaptureSession.isSupported {
+            if Scanner.supportata {
                 Button { crea(scansiona: true) } label: {
                     HStack(spacing: 14) {
                         Image(systemName: "camera.metering.matrix")
@@ -153,7 +153,7 @@ struct Elenco: View {
                             .shadow(color: Tema.cAccento.opacity(0.6), radius: 14)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Scansiona con LiDAR").font(.headline)
-                            Text("Pareti, porte e finestre in automatico, arredi esclusi")
+                            Text("Nuvola di punti semplificata in pianta: pareti, porte, finestre, altezze")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer(minLength: 0)

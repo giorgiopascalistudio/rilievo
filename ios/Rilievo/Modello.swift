@@ -155,6 +155,8 @@ struct Stanza: Codable, Identifiable, Equatable {
     var soffitto = Soffitto()
     var ostacoli: [Ostacolo] = []
     var origine = "disegno"
+    /// fetta orizzontale della nuvola di punti (metri), mostrata sotto la pianta
+    var traccia: [CGPoint]?
 
     static func nuova(nome: String, punti: [CGPoint], spessore: Double = 0.25) -> Stanza {
         let n = punti.count
@@ -192,6 +194,7 @@ struct Stanza: Codable, Identifiable, Equatable {
     mutating func trasla(_ d: CGPoint) {
         punti = punti.map { $0 + d }
         for k in ostacoli.indices { ostacoli[k].centro = ostacoli[k].centro + d }
+        traccia = traccia?.map { $0 + d }
     }
 
     mutating func dividiLato(_ i: Int) {
@@ -255,6 +258,8 @@ struct Rilievo: Codable, Identifiable, Equatable {
     var modificato = Date()
     var stanze: [Stanza] = []
     var note = ""
+    /// nuvole di punti salvate (nomi file in Documenti/Nuvole)
+    var nuvole: [String]?
 
     var superficie: Double { stanze.reduce(0) { $0 + $1.area } }
     var quoteFatte: (fatte: Int, totali: Int) {

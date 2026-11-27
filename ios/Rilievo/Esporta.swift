@@ -148,6 +148,14 @@ enum Esporta {
         let fJSON = dir.appendingPathComponent(nome + ".rilievo.json")
         try? dxf(r).data(using: .windowsCP1252, allowLossyConversion: true)?.write(to: fDXF)
         try? Archivio.encoder.encode(r).write(to: fJSON)
-        return [fDXF, fJSON]
+        var out = [fDXF, fJSON]
+        let cartella = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("Nuvole")
+        for (k, n) in (r.nuvole ?? []).enumerated() {
+            let src = cartella.appendingPathComponent(n)
+            let dst = dir.appendingPathComponent(nome + "_nuvola\((r.nuvole?.count ?? 0) > 1 ? "_\(k + 1)" : "").ply")
+            try? FileManager.default.removeItem(at: dst)
+            if (try? FileManager.default.copyItem(at: src, to: dst)) != nil { out.append(dst) }
+        }
+        return out
     }
 }

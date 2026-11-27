@@ -19,6 +19,7 @@ struct EditorView: View {
     @ObservedObject private var sincro = Sincro.condivisa
     @State private var ispettore = false
     @State private var scansione = false
+    @State private var nuvola = false
     @State private var condivisi: FileCondivisi?
     @State private var rinomina = false
     @State private var nuovoNome = ""
@@ -54,6 +55,11 @@ struct EditorView: View {
                     if model.avviso == v { withAnimation(.easeInOut) { model.avviso = nil } }
                 }
             }
+            .fullScreenCover(isPresented: $nuvola) {
+                SchermataNuvola(primoNumero: model.rilievo.stanze.count + 1) { stanze, ply in
+                    model.importaNuvola(stanze, ply: ply)
+                }
+            }
             .fullScreenCover(isPresented: $scansione) {
                 SchermataScansione { stanze in model.importaLidar(stanze) }
             }
@@ -65,7 +71,7 @@ struct EditorView: View {
             }
             .onAppear {
                 if model.selezione != .nessuna { ispettore = true }
-                if scansionaSubito && model.rilievo.stanze.isEmpty && RoomCaptureSession.isSupported { scansione = true }
+                if scansionaSubito && model.rilievo.stanze.isEmpty { avviaScansione() }
             }
             .overlay(alignment: .top) { if model.rilievo.stanze.isEmpty { vuoto.padding(.top, 60) } }
             .onDisappear { Sincro.condivisa.sincronizza(nil) }
@@ -80,12 +86,16 @@ struct EditorView: View {
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button { model.annulla() } label: { Image(systemName: "arrow.uturn.backward") }
                 .disabled(!model.puoAnnullare)
-            if RoomCaptureSession.isSupported {
-                Button { scansione = true } label: { Image(systemName: "camera.metering.matrix") }
+            if Scanner.supportata {
+                Button { avviaScansione() } label: { Image(systemName: "camera.metering.matrix") }
             }
             Menu {
                 Toggle(isOn: $model.mostraArredi) { Label("Arredi rilevati", systemImage: "sofa") }
                 Toggle(isOn: $model.mostraDiagonali) { Label("Diagonali", systemImage: "line.diagonal") }
+                Toggle(isOn: $model.mostraNuvola) { Label("Traccia nuvola di punti", systemImage: "circle.grid.3x3") }
+                if RoomCaptureSession.isSupported {
+                    Button { scansione = true } label: { Label("Scansione rapida (RoomPlan)", systemImage: "cube.transparent") }
+                }
                 Button { model.inquadra += 1 } label: { Label("Inquadra tutto", systemImage: "arrow.up.left.and.arrow.down.right") }
                 Button { nuovoNome = model.rilievo.nome; rinomina = true } label: { Label("Rinomina", systemImage: "pencil") }
             } label: { Image(systemName: "slider.horizontal.3") }
@@ -126,6 +136,10 @@ struct EditorView: View {
         return "\(model.rilievo.stanze.count) stanze · \(q.fatte)/\(q.totali) quote · tocca una stanza"
     }
 
+    private func avviaScansione() {
+        if Scanner.supportata { nuvola = true } else if RoomCaptureSession.isSupported { scansione = true }
+    }
+
     private var vuoto: some View {
         VStack(spacing: 18) {
             Image(systemName: "square.dashed")
@@ -133,8 +147,8 @@ struct EditorView: View {
                 .foregroundStyle(Tema.cAccento.opacity(0.7))
                 .symbolEffect(.pulse)
             Text("Pianta vuota").font(.title3.weight(.semibold))
-            if RoomCaptureSession.isSupported {
-                Button { scansione = true } label: {
+            if Scanner.supportata {
+                Button { avviaScansione() } label: {
                     Label("Scansiona con LiDAR", systemImage: "camera.metering.matrix")
                         .font(.headline).padding(.horizontal, 22).padding(.vertical, 14)
                         .background(Tema.cAccento, in: Capsule()).foregroundStyle(.black)
@@ -142,8 +156,7 @@ struct EditorView: View {
                 }
                 .buttonStyle(EffettoPremuto())
             }
-            Text("oppure disegna il perimetro con la Pencil
-(col dito: strumento Disegna)")
+            Text("oppure disegna il perimetro con la Pencil\n(col dito: strumento Disegna)")
                 .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
         .padding(28)
@@ -154,8 +167,8 @@ struct EditorView: View {
 
     private var barraInferiore: some View {
         VStack(spacing: 8) {
-            if RoomCaptureSession.isSupported && !model.rilievo.stanze.isEmpty {
-                Button { scansione = true } label: {
+            if Scanner.supportata && !model.rilievo.stanze.isEmpty {
+                Button { avviaScansione() } label: {
                     Label("Scansiona altre stanze", systemImage: "camera.metering.matrix")
                         .font(.subheadline.weight(.semibold))
                         .padding(.horizontal, 16).padding(.vertical, 9)
