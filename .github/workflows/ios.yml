@@ -1,0 +1,32 @@
+name: Build iOS
+on:
+  push:
+    paths: ["ios/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode piu recente
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          [ -n "$X" ] && sudo xcode-select -s "$X"
+          xcodebuild -version
+      - run: brew install xcodegen
+      - name: Build IPA non firmato
+        working-directory: ios
+        run: |
+          xcodegen generate
+          xcodebuild -project Rilievo.xcodeproj -target Rilievo -configuration Release \
+            -sdk iphoneos SYMROOT="$PWD/build" CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || {
+              grep -E "error:|BUILD FAILED" build.log | sort -u | head -80; exit 1; }
+          grep -E "warning:" build.log | grep -v "deprecated" | sort -u | head -30 || true
+          test -f build/Release-iphoneos/Rilievo.app/Rilievo
+          mkdir -p Payload
+          cp -R build/Release-iphoneos/Rilievo.app Payload/
+          zip -qry Rilievo.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rilievo-ipa
+          path: ios/Rilievo.ipa
