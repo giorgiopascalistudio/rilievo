@@ -1,0 +1,36 @@
+name: Rilievo
+options:
+  bundleIdPrefix: com.giorgiopascali
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Rilievo:
+    type: application
+    platform: iOS
+    sources:
+      - path: Rilievo
+    info:
+      path: Rilievo/Info.plist
+      properties:
+        CFBundleDisplayName: Rilievo
+        CFBundleDevelopmentRegion: it
+        CFBundleShortVersionString: "0.1"
+        CFBundleVersion: "1"
+        UILaunchScreen:
+          UIColorName: ""
+        UIRequiredDeviceCapabilities: [arm64]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIStatusBarStyle: UIStatusBarStyleLightContent
+        NSCameraUsageDescription: "La fotocamera e il LiDAR servono per scansionare le stanze e riconoscere pareti, porte e finestre."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.giorgiopascali.rilievo
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
