@@ -61,7 +61,13 @@ struct Elenco: View {
                 if let r = archivio.rilievo(id) { EditorView(rilievo: r, archivio: archivio) }
             }
             .toolbar(.hidden, for: .navigationBar)
-            .onAppear { comparso = true }
+            .onAppear {
+                comparso = true
+                if percorso.isEmpty, let r = Prova.rilievo() {
+                    archivio.salva(r)
+                    percorso.append(r.id)
+                }
+            }
             .fileImporter(isPresented: $sceltaCartella, allowedContentTypes: [.folder]) { esito in
                 if case .success(let url) = esito {
                     Sincro.condivisa.imposta(url)

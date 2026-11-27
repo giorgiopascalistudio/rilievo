@@ -59,6 +59,7 @@ struct EditorView: View {
                 Button("Salva") { model.rinomina(nuovoNome) }
                 Button("Annulla", role: .cancel) {}
             }
+            .onAppear { if model.selezione != .nessuna { ispettore = true } }
             .onDisappear { Sincro.condivisa.sincronizza(nil) }
     }
 

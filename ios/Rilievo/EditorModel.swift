@@ -65,6 +65,7 @@ final class EditorModel: ObservableObject {
     init(rilievo: Rilievo, archivio: Archivio) {
         self.rilievo = rilievo
         self.archivio = archivio
+        if Prova.selezionaPrima, let s = rilievo.stanze.first { selezione = .stanza(s.id) }
         osservatore = NotificationCenter.default.addObserver(forName: .rilievoRemoto, object: nil, queue: .main) { [weak self] n in
             guard let self, let r = n.object as? Rilievo, r.id == self.rilievo.id, !self.trascinamento,
                   r.modificato > self.rilievo.modificato else { return }
